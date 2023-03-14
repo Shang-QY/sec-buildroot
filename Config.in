@@ -886,3 +886,8 @@ source "Config.in.legacy"
 
 # br2-external menus definitions
 source "$BR2_BASE_DIR/.br2-external.in.menus"
+
+config BR2_PENGLAI_CUSTOM_ROOTFS
+	bool "built with penglai customized rootfs"
+	help
+	  penglai customized rootfs for flexible environment

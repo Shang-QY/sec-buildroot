@@ -792,6 +792,12 @@ endif
 		echo "PRETTY_NAME=\"Buildroot $(BR2_VERSION)\"" \
 	) >  $(TARGET_DIR)/usr/lib/os-release
 	ln -sf ../usr/lib/os-release $(TARGET_DIR)/etc
+ifeq ($(BR2_PENGLAI_CUSTOM_ROOTFS),y)
+	@$(call MESSAGE,"[Penglai] Making/Updating customized rootfs")
+	rm -rf $(TARGET_DIR)/root/penglai_rootfs
+	make -C $(CURDIR)/customized_rootfs clean all
+	cp -r $(CURDIR)/customized_rootfs/penglai_rootfs $(TARGET_DIR)/root/
+endif
 
 	@$(call MESSAGE,"Sanitizing RPATH in target tree")
 	PER_PACKAGE_DIR=$(PER_PACKAGE_DIR) $(TOPDIR)/support/scripts/fix-rpath target
