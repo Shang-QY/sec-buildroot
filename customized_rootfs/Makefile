@@ -1,16 +1,18 @@
 # Targets
 all: penglai_rootfs
 
-packages:
+layers := $(CURDIR)/layers
+
+$(layers):
 	mkdir -p layers
 	mkdir -p layers/docker_toolchain_image
-	pushd layers/numpy && wget http://106.14.179.121/buildroot/docker_toolchain_image/rootfs.tar && popd
+	wget -P layers/docker_toolchain_image http://106.14.179.121/buildroot/docker_toolchain_image/rootfs.tar
 	mkdir -p layers/python
-	pushd layers/numpy && wget http://106.14.179.121/buildroot/python/rootfs.tar && popd
+	wget -P layers/python http://106.14.179.121/buildroot/python/rootfs.tar
 	mkdir -p layers/numpy
-	pushd layers/numpy && wget http://106.14.179.121/buildroot/numpy/numpy_module.tar && popd
+	wget -P layers/numpy http://106.14.179.121/buildroot/numpy/numpy_module.tar
 
-penglai_rootfs: packages
+penglai_rootfs: $(layers)
 	mkdir penglai_rootfs
 # docker_toolchain_image is base layer, ubuntu environment with build toolchain
 	tar -xf layers/docker_toolchain_image/rootfs.tar -C penglai_rootfs
