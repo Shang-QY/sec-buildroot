@@ -799,6 +799,13 @@ ifeq ($(BR2_PENGLAI_CUSTOM_ROOTFS),y)
 	cp -r $(CURDIR)/customized_rootfs/penglai_rootfs $(TARGET_DIR)/root/
 endif
 
+ifeq ($(BR2_PENGLAI_DOCKER_ROOTFS),y)
+	@$(call MESSAGE,"[Penglai] Installing docker rootfs")
+	rm -rf $(TARGET_DIR)/root/penglai_rootfs
+	make -C $(CURDIR)/docker_rootfs clean all
+	cp -r $(CURDIR)/docker_rootfs/penglai_rootfs $(TARGET_DIR)/root/
+endif
+
 	@$(call MESSAGE,"Sanitizing RPATH in target tree")
 	PER_PACKAGE_DIR=$(PER_PACKAGE_DIR) $(TOPDIR)/support/scripts/fix-rpath target
 
