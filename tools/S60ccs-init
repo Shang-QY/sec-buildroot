@@ -1,0 +1,65 @@
+#!/bin/sh
+#
+# Cryper Certificate Struct Initialization
+#
+
+umask 077
+
+start() {
+        printf "Cryper Certificate Struct init: "
+
+        # user-customized field layout:
+        # magic number(16 bytes)
+        # ip address info(128 bytes)
+        # publickey footprint(128 bytes)
+
+        dd if=/dev/zero of=/dev/mem bs=1 count=$((0x200)) seek=$((0x100000000)) > /dev/null 2>&1
+
+        max_len=128
+
+        # 获取IP地址并写入物理内存地址
+        ipinfo_str=$(cat /root/ipinfo.txt | tr -d "\n\r")
+        printf "ipaddr info:\n%s\n" "$ipinfo_str"
+
+        ipinfo_len=$(echo "$ipinfo_str" | wc -c)
+        if [[ $ipinfo_len -le $max_len ]]
+        then
+        echo "$ipinfo_str" | dd of=/dev/mem bs=1 count=$ipinfo_len seek=$((0x100000010)) conv=notrunc > /dev/null 2>&1
+        printf "Successfully wrote %d bytes from ipaddr info to physical memory\n" "$ipinfo_len"
+        else
+        echo "Error: ipaddr info exceeds the maximum permissible length of $max_len bytes"
+        fi
+
+        # 生成密钥指纹并写入物理内存地址
+        footprint_str=$(ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub | tr -d "\n\r")
+        printf "sshd publickey footprint:\n%s\n" "$footprint_str"
+
+        footprint_len=$(echo "$footprint_str" | wc -c)
+        if [[ $footprint_len -le $max_len ]]
+        then
+        echo "$footprint_str" | dd of=/dev/mem bs=1 count=$footprint_len seek=$((0x100000090)) conv=notrunc > /dev/null 2>&1
+        printf "Successfully wrote %d bytes from publickey footprint to physical memory\n" "$footprint_len"
+        else
+        echo "Error: publickey footprint exceeds the maximum permissible length of $max_len bytes"
+        fi
+
+        # 写入魔数
+        echo "TEE running" | dd of=/dev/mem bs=1 count=$((0x10)) seek=$((0x100000000)) conv=notrunc > /dev/null 2>&1
+        printf "Successfully wrote magic number to physical memory\n"
+
+        printf "\nmem layout:\n"
+        memtool md -b 0x100000000-0x1000001ff
+
+        echo "OK"
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  *)
+        echo "Usage: $0 {start}"
+        exit 1
+esac
+
+exit $?

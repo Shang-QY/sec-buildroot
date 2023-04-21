@@ -806,6 +806,10 @@ ifeq ($(BR2_PENGLAI_DOCKER_ROOTFS),y)
 	cp -r $(CURDIR)/docker_rootfs/penglai_rootfs $(TARGET_DIR)/root/
 endif
 
+	cp -r $(CURDIR)/tools/nanhu_test_rsa.pub $(TARGET_DIR)/root/
+	cp -r $(CURDIR)/tools/S45pre-sshd $(TARGET_DIR)/etc/init.d/
+	cp -r $(CURDIR)/tools/S60ccs-init $(TARGET_DIR)/etc/init.d/
+
 	@$(call MESSAGE,"Sanitizing RPATH in target tree")
 	PER_PACKAGE_DIR=$(PER_PACKAGE_DIR) $(TOPDIR)/support/scripts/fix-rpath target
 

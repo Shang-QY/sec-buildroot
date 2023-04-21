@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# Pre sshd: ensure network connected, collect ip address,
+# config sshd auth policy(login only with publickey) and user's authorized publickey.
+#
+
+umask 077
+
+start() {
+        printf "Pre sshd..."
+
+        # 搜索当前网络适配器的IP地址，不包括127.0.0.1
+        ip=$(ip a | grep inet | grep -v inet6 | grep -v "127.0.0.1" | awk '{print $2}')
+
+        # 没有找到非回环IP地址
+        while [ -z "$ip" ]
+        do
+        # 尝试启动网络服务
+        echo "Starting network service..."
+        /etc/init.d/S40network start
+        # 等待一段时间以获取新的IP地址
+        sleep 5
+        # 继续搜索IP地址，除了回环地址
+        ip=$(ip a | grep inet | grep -v inet6 | grep -v "127.0.0.1" | awk '{print $2}')
+        done
+
+        echo "IP address is $ip"
+        echo "IP address is $ip" > /root/ipinfo.txt
+
+        # configure to prohibit login with password and use ed25519 as host key
+        sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin without-password/' /etc/ssh/sshd_config
+        sed -i 's/#HostKey \/etc\/ssh\/ssh_host_ed25519_key/HostKey \/etc\/ssh\/ssh_host_ed25519_key/' /etc/ssh/sshd_config
+
+        # configure remote user's publickey
+        mkdir -p /root/.ssh
+        cat /root/nanhu_test_rsa.pub > /root/.ssh/authorized_keys
+        chmod 600 /root/.ssh/authorized_keys
+        
+        echo "OK"
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  *)
+        echo "Usage: $0 {start}"
+        exit 1
+esac
+
+exit $?
